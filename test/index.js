@@ -4,6 +4,52 @@ const assert = require("node:assert");
 const { describe, it } = require("node:test");
 const { RefCounter } = require("../main");
 
+describe("unit", () => {
+  describe("constructor", () => {
+    it("validation", () => {
+      const INVALID_OBJECT = "Invalid target for ref counter, an object required";
+      const NO_SYMBOL_DISPOSE = "Can't find reference's [Symbol.dispose] method";
+      assert.throws(() => {
+        new RefCounter({ a: 1 });
+      }, { message: NO_SYMBOL_DISPOSE });
+      assert.throws(() => {
+        new RefCounter(null);
+      }, { message: INVALID_OBJECT });
+      assert.throws(() => {
+        new RefCounter();
+      }, { message: INVALID_OBJECT });
+      assert.throws(() => {
+        new RefCounter(1);
+      }, { message: INVALID_OBJECT });
+    });
+    it("[Symbol.dispose]", () => {
+      const instance = {
+        a: 0,
+        [Symbol.dispose]() { },
+      };
+      const dispose = instance[Symbol.dispose];
+      const counter = new RefCounter(instance);
+      using i = counter.ref();
+      assert.deepStrictEqual(instance, i);
+      assert.ok(dispose !== i[Symbol.dispose]);
+    });
+    it("onDispose", () => {
+      const dispose = function () { }
+      const instance = { a: 0, };
+      const counter = new RefCounter(instance, dispose);
+      using i = counter.ref();
+      assert.deepStrictEqual(instance, i);
+      assert.ok(dispose !== i[Symbol.dispose]);
+    });
+  });
+
+  it("ref", () => {
+
+  });
+  
+  it("drop", () => { });
+});
+
 // const getCounter = (counter) => {
 //   using c = counter.ref();
 //   console.log("counter end", c);

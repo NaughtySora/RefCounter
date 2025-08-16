@@ -8,10 +8,16 @@ class RefCounter {
   #originalDispose = null;
 
   constructor(entity, onDispose) {
+    if (
+      entity === null ||
+      (typeof entity !== "object" && typeof entity !== "function")
+    ) {
+      throw new Error("Invalid target for ref counter, an object required");
+    }
     const original = this.#originalDispose = entity?.[Symbol.dispose];
-    this.#dispose = original ?? onDispose ?? null;
-    if (this.#dispose === null) {
-      throw new Error("Can't find references' [Symbol.dispose] method");
+    const dispose = this.#dispose = original ?? onDispose ?? null;
+    if (dispose === null) {
+      throw new Error("Can't find reference's [Symbol.dispose] method");
     }
     Object.defineProperty(entity, Symbol.dispose, {
       value: () => {

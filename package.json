@@ -1,0 +1,11 @@
+{
+  "name": "ref-counter",
+  "version": "0.0.1",
+  "description": "JavaScript Referential counter",
+  "license": "MIT",
+  "author": "NaughtySora <naughtysora@proton.me>",
+  "exports": "./index.js",
+  "scripts": {
+    "test": "node ./test/index.js"
+  }
+}

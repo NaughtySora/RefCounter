@@ -97,12 +97,37 @@ describe("integrated", () => {
       const instance = { a: 1, [Symbol.dispose]() { this.a = 42 } };
       const counter = new RefCounter(instance);
       using ref = counter.ref();
-      return counter;
+      assert.deepStrictEqual(ref, instance);
+      assert.strictEqual(ref.a, instance.a);
+      assert.strictEqual(counter.count, 1);
+      assert.strictEqual(counter.dropped, false);
+      return {
+        moved: counter.move(),
+        counter,
+        instance,
+      };
     };
-
-    // {
-    //   using a = produceCounter();
-    // }
+    let outer = null;
+    let outerCounter = null;
+    {
+      const { moved, counter, instance } = produceCounter();
+      assert.strictEqual(instance.a, 1);
+      assert.strictEqual(counter.count, 0);
+      assert.strictEqual(counter.dropped, true);
+      assert.strictEqual(moved.count, 0);
+      assert.strictEqual(moved.dropped, false);
+      using ref = moved.ref();
+      assert.deepStrictEqual(instance, ref);
+      assert.strictEqual(ref.a, 1);
+      assert.strictEqual(moved.count, 1);
+      assert.strictEqual(moved.dropped, false);
+      assert.ok(moved !== counter);
+      outer = ref;
+      outerCounter = moved;
+    }
+    assert.strictEqual(outer.a, 42);
+    assert.strictEqual(outerCounter.dropped, true);
+    assert.strictEqual(outerCounter.count, 0);
   });
 
   it("passing counter into function", () => {
@@ -135,25 +160,3 @@ describe("integrated", () => {
     assert.strictEqual(instance.value, undefined);
   });
 });
-
-
-
-// {
-//   // usage
-//   const free = (a) => void console.log(`dispose ${JSON.stringify(a)}`, a.value = 0);
-//   const smile = console.log.bind(null, "free :3");
-//   const v = { value: 5 }
-//   const counter = new RefCounter(v, free);
-//   {
-//     using a = counter.ref();
-//     console.log("inner end a", a, v);
-//     {
-//       using b = counter.ref();
-//       console.log("inner end b", b, v);
-//     }
-//     // counter.drop();
-//     console.log("check counter ref dropped", counter.dropped);
-//     getCounter(counter);
-//   }
-//   console.log("end", v, "check counter ref dropped", counter.dropped);
-// }

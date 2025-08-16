@@ -21,6 +21,7 @@ class RefCounter {
     }
     Object.defineProperty(entity, Symbol.dispose, {
       value: () => {
+        if (this.dropped) return;
         this.#references--;
         if (this.#references !== 0) return;
         this.#dispose.call(this.#entity, this.#entity);
@@ -56,11 +57,18 @@ class RefCounter {
     this.#originalDispose = null;
   }
 
+  move() {
+    const entity = this.#entity;
+    const dispose = this.#dispose;
+    this.drop();
+    return new RefCounter(entity, dispose);
+  }
+
   get dropped() {
     return this.#dropped;
   }
 
-  get count(){
+  get count() {
     return this.#references;
   }
 }

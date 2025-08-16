@@ -59,6 +59,10 @@ class RefCounter {
   get dropped() {
     return this.#dropped;
   }
+
+  get count(){
+    return this.#references;
+  }
 }
 
 module.exports = { RefCounter };

@@ -4,4 +4,5 @@ export class RefCounter<T, D = ((entity: T) => void)> {
   ref(): T;
   drop(): void;
   dropped: boolean;
+  count: number;
 }

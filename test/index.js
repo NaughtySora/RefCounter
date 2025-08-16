@@ -91,10 +91,52 @@ describe("unit", () => {
   });
 });
 
-// const getCounter = (counter) => {
-//   using c = counter.ref();
-//   console.log("counter end", c);
-// };
+describe("integrated", () => {
+  it("returning counter", () => {
+    const produceCounter = () => {
+      const instance = { a: 1, [Symbol.dispose]() { this.a = 42 } };
+      const counter = new RefCounter(instance);
+      using ref = counter.ref();
+      return counter;
+    };
+
+    // {
+    //   using a = produceCounter();
+    // }
+  });
+
+  it("passing counter into function", () => {
+    const getCounter = (counter, instance) => {
+      using c = counter.ref();
+      assert.strictEqual(counter.count, 2);
+      assert.deepStrictEqual(c, instance);
+    };
+    const free = a => void (a.value = undefined);
+    const instance = { value: 5 };
+    const counter = new RefCounter(instance, free);
+    {
+      using a = counter.ref();
+      assert.strictEqual(counter.count, 1);
+      assert.deepStrictEqual(a, instance);
+      assert.strictEqual(instance.value, 5);
+      {
+        using b = counter.ref();
+        assert.strictEqual(counter.count, 2);
+        assert.deepStrictEqual(b, instance);
+        assert.strictEqual(instance.value, 5);
+      }
+      assert.strictEqual(counter.count, 1);
+      getCounter(counter, instance);
+      assert.strictEqual(counter.count, 1);
+      assert.strictEqual(instance.value, 5);
+    }
+    assert.strictEqual(counter.count, 0);
+    assert.strictEqual(counter.dropped, true);
+    assert.strictEqual(instance.value, undefined);
+  });
+});
+
+
 
 // {
 //   // usage
@@ -114,35 +156,4 @@ describe("unit", () => {
 //     getCounter(counter);
 //   }
 //   console.log("end", v, "check counter ref dropped", counter.dropped);
-// }
-
-
-// {
-//   // usage
-//   const free = (a) => void console.log(`dispose ${JSON.stringify(a)}`, a.value = 0);
-//   const v = {
-//     value: 5,
-//     [Symbol.dispose](self) {
-//       console.log("BOOM!");
-//       this.value = Math.random();
-//     }
-//   };
-//   const counter = new RefCounter(v, free);
-//   {
-//     using a = counter.ref();
-//     console.log("inner end a", a, v);
-//     {
-//       using b = counter.ref();
-//       console.log("inner end b", b, v);
-//     }
-//     // counter.drop();
-//     console.log("check counter ref dropped", counter.dropped);
-//     getCounter(counter);
-//   }
-//   console.log("end", v, "check counter ref dropped", counter.dropped, counter);
-
-//   {
-//     using test = v;
-//   }
-//   console.log(v)
 // }
